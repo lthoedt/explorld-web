@@ -1,3 +1,13 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+/* remove mapbox add */
+.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right {
+    display: none;
+}
+
 .media-item.active {
     background: rgb(63, 94, 251);
     background: radial-gradient(circle at left top, rgba(63, 94, 251, 0.8) 0%, rgba(203, 103, 123, 1) 100%);
