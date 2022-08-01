@@ -1,11 +1,11 @@
 import React from "react";
-import MapGL from "./components/MapGL";
+import MapBoxGL from "./components/MapBoxGL";
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 export default function App() {
 	return (
 		<div>
-			<MapGL></MapGL>
+			<MapBoxGL></MapBoxGL>
 		</div>
 	);
 }
