@@ -8,6 +8,10 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
 import { useDispatch, useSelector } from "react-redux";
 
+import { JOURNEY_ACTIONS } from "../actions/journeyActions";
+
+import Coordinate from "../classes/Coordinate";
+
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 const MapBoxStyles = require("../constants/mapBoxStyles.json");
 
@@ -24,14 +28,21 @@ export default function MapBoxGL() {
 		point.coordinates.toArray()
 	);
 
-	console.log(journeyCoords)
-
 	const mapContainer = useRef(null);
 	const map = useRef(null);
 
 	// TODO: LOAD last location
 	const [lng, setLng] = useState(5.88);
 	const [lat, setLat] = useState(51.98);
+
+	const journeyData = {
+		type: "Feature",
+		properties: {},
+		geometry: {
+			type: "LineString",
+			coordinates: journeyCoords,
+		},
+	};
 
 	useEffect(() => {
 		if (map.current) return; // initialize map only once
@@ -43,15 +54,15 @@ export default function MapBoxGL() {
 			projection: "globe",
 		});
 
-		map.current.addControl(
-			new mapboxgl.GeolocateControl({
-				positionOptions: {
-					enableHighAccuracy: true,
-				},
-				trackUserLocation: true,
-				showUserHeading: true,
-			})
-		);
+		const geolocate = new mapboxgl.GeolocateControl({
+			positionOptions: {
+				enableHighAccuracy: true,
+			},
+			trackUserLocation: true,
+			showUserHeading: true,
+		});
+
+		map.current.addControl(geolocate);
 
 		map.current.addControl(
 			new MapboxGeocoder({
@@ -60,6 +71,18 @@ export default function MapBoxGL() {
 				marker: false,
 			})
 		);
+
+		geolocate.on("geolocate", function (e) {
+			const lat = e.coords.latitude;
+			const lon = e.coords.longitude;
+
+			dispatch({
+				type: JOURNEY_ACTIONS.addPoint,
+				coordinate: new Coordinate(lat, lon),
+				heading: e.coords.heading,
+			});
+
+		});
 
 		async function waitForMap() {
 			await map.current.once("load");
@@ -85,22 +108,15 @@ export default function MapBoxGL() {
 				exaggeration: 1,
 			});
 
-			map.current.addSource("route", {
+			map.current.addSource("journey", {
 				type: "geojson",
-				data: {
-					type: "Feature",
-					properties: {},
-					geometry: {
-						type: "LineString",
-						coordinates: journeyCoords,
-					},
-				},
+				data: journeyData,
 			});
 
 			map.current.addLayer({
-				id: "route",
+				id: "journey",
 				type: "line",
-				source: "route",
+				source: "journey",
 				layout: {
 					"line-join": "round",
 					"line-cap": "round",
@@ -116,7 +132,10 @@ export default function MapBoxGL() {
 	});
 
 	useEffect(() => {
-		if (!map.current) return; // wait for map to initialize
+		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
+
+		map.current.getSource("journey").setData(journeyData);
+
 		// setInterval(() => {
 		// 	console.log('asd')
 		// }, 2000)
