@@ -6,6 +6,8 @@ import mapboxgl from "mapbox-gl";
 // API DOCS : https://github.com/mapbox/mapbox-gl-geocoder
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
+import { useDispatch, useSelector } from "react-redux";
+
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 const MapBoxStyles = require("../constants/mapBoxStyles.json");
 
@@ -15,19 +17,29 @@ const TOKEN =
 mapboxgl.accessToken = TOKEN;
 
 export default function MapBoxGL() {
+	const dispatch = useDispatch();
+	const state = useSelector((state) => state.journey);
+
+	const journeyCoords = state.journey.map((point) =>
+		point.coordinates.toArray()
+	);
+
+	console.log(journeyCoords)
+
 	const mapContainer = useRef(null);
 	const map = useRef(null);
-	const [lng, setLng] = useState(-70.9);
-	const [lat, setLat] = useState(42.35);
-	const [zoom, setZoom] = useState(9);
+
+	// TODO: LOAD last location
+	const [lng, setLng] = useState(5.88);
+	const [lat, setLat] = useState(51.98);
 
 	useEffect(() => {
 		if (map.current) return; // initialize map only once
 		map.current = new mapboxgl.Map({
 			container: mapContainer.current,
-			style: MapBoxStyles["satelitte-streets"],
+			style: MapBoxStyles.outdoors,
 			center: [lng, lat],
-			zoom: zoom,
+			zoom: 13,
 			projection: "globe",
 		});
 
@@ -70,7 +82,33 @@ export default function MapBoxGL() {
 			});
 			map.current.setTerrain({
 				source: "mapbox-dem",
-				exaggeration: 1.5,
+				exaggeration: 1,
+			});
+
+			map.current.addSource("route", {
+				type: "geojson",
+				data: {
+					type: "Feature",
+					properties: {},
+					geometry: {
+						type: "LineString",
+						coordinates: journeyCoords,
+					},
+				},
+			});
+
+			map.current.addLayer({
+				id: "route",
+				type: "line",
+				source: "route",
+				layout: {
+					"line-join": "round",
+					"line-cap": "round",
+				},
+				paint: {
+					"line-color": "#888",
+					"line-width": 8,
+				},
 			});
 		}
 
@@ -79,18 +117,13 @@ export default function MapBoxGL() {
 
 	useEffect(() => {
 		if (!map.current) return; // wait for map to initialize
-		map.current.on("move", () => {
-			setLng(map.current.getCenter().lng.toFixed(4));
-			setLat(map.current.getCenter().lat.toFixed(4));
-			setZoom(map.current.getZoom().toFixed(2));
-		});
+		// setInterval(() => {
+		// 	console.log('asd')
+		// }, 2000)
 	});
 
 	return (
 		<div>
-			<div className="sidebar">
-				Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
-			</div>
 			<div ref={mapContainer} className="map-container" />
 		</div>
 	);
