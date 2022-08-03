@@ -29,6 +29,8 @@ const initialJourneyState = {
 export default (state = initialJourneyState, action) => {
 	switch (action.type) {
 		case JOURNEY_ACTIONS.addPoint:
+			const distanceMovedThreshhold = 5; // TODO: changable by data/performance setting
+
 			let lastLocation = state.journey[state.journey.length - 1];
 
 			if (lastLocation) {
@@ -39,6 +41,7 @@ export default (state = initialJourneyState, action) => {
 					action.coordinate.lat,
 					action.coordinate.lon
 				);
+				if (distanceMoved - distanceMovedThreshhold < 0) return state; // move atleast threshold before new upload
 			}
 
 			const point = new Point(
@@ -47,6 +50,7 @@ export default (state = initialJourneyState, action) => {
 				action.heading,
 				Date.now()
 			);
+
 			return { ...state, journey: [...state.journey, point] };
 		default:
 			return state;
