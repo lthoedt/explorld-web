@@ -73,6 +73,8 @@ export default function MapBoxGL() {
 		);
 
 		geolocate.on("geolocate", function (e) {
+			const newLocationTravelDistanceTreshhold = 100;
+
 			const lat = e.coords.latitude;
 			const lon = e.coords.longitude;
 
@@ -81,7 +83,6 @@ export default function MapBoxGL() {
 				coordinate: new Coordinate(lat, lon),
 				heading: e.coords.heading,
 			});
-
 		});
 
 		async function waitForMap() {
