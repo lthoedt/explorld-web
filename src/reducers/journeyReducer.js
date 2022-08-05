@@ -4,6 +4,7 @@ import Coordinate from "../classes/Coordinate";
 import { JOURNEY_ACTIONS } from "../actions/journeyActions";
 
 const initialJourneyState = {
+	status: "loaded",
 	journey: [
 		new Point(
 			"1",
@@ -11,24 +12,25 @@ const initialJourneyState = {
 			0,
 			Date.now() - 3550
 		),
-		// new Point(
-		// 	"1",
-		// 	new Coordinate(51.98368, 5.882087),
-		// 	0,
-		// 	Date.now() - 3600
-		// ),
-		// new Point(
-		// 	"1",
-		// 	new Coordinate(51.984056, 5.892321),
-		// 	0,
-		// 	Date.now() - 3500
-		// ),
+		new Point(
+			"1",
+			new Coordinate(51.98368, 5.882087),
+			0,
+			Date.now() - 3600
+		),
+		new Point(
+			"1",
+			new Coordinate(51.984056, 5.892321),
+			0,
+			Date.now() - 3500
+		),
 	], // Point
+	unsyncedJourney: []
 };
 
 export default (state = initialJourneyState, action) => {
 	switch (action.type) {
-		case JOURNEY_ACTIONS.addPoint:
+		case JOURNEY_ACTIONS.ADD_POINT:
 			const distanceMovedThreshhold = 5; // TODO: changable by data/performance setting
 
 			let lastLocation = state.journey[state.journey.length - 1];
@@ -45,13 +47,21 @@ export default (state = initialJourneyState, action) => {
 			}
 
 			const point = new Point(
-				1,
+				"1",
 				action.coordinate,
 				action.heading,
 				Date.now()
 			);
 
-			return { ...state, journey: [...state.journey, point] };
+			// TODO: upload to database
+			return { ...state, unsyncedJourney: [...state.unsyncedJourney, point] };
+
+		case JOURNEY_ACTIONS.SET_STATUS:
+			return { ...state, status: action.status }
+
+		case JOURNEY_ACTIONS.POINTS_SYNCED:
+			// move synced points to journey
+			return {...state, journey: [...state.journey, ...state.unsyncedJourney], unsyncedJourney: []}
 		default:
 			return state;
 	}

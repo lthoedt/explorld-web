@@ -8,7 +8,7 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { JOURNEY_ACTIONS } from "../actions/journeyActions";
+import { JOURNEY_ACTIONS, syncPoints } from "../actions/journeyActions";
 
 import Coordinate from "../classes/Coordinate";
 
@@ -24,7 +24,7 @@ export default function MapBoxGL() {
 	const dispatch = useDispatch();
 	const state = useSelector((state) => state.journey);
 
-	const journeyCoords = state.journey.map((point) =>
+	const journeyCoords = [...state.journey, ...state.unsyncedJourney].map((point) =>
 		point.coordinates.toArray()
 	);
 
@@ -72,17 +72,20 @@ export default function MapBoxGL() {
 			})
 		);
 
-		geolocate.on("geolocate", function (e) {
-			const newLocationTravelDistanceTreshhold = 100;
-
+		// Explorer moved
+		geolocate.on('geolocate', function (e) {
 			const lat = e.coords.latitude;
 			const lon = e.coords.longitude;
 
+			console.log('===============================')
+
 			dispatch({
-				type: JOURNEY_ACTIONS.addPoint,
+				type: JOURNEY_ACTIONS.ADD_POINT,
 				coordinate: new Coordinate(lat, lon),
 				heading: e.coords.heading,
 			});
+
+			if (state.status != 'syncing') dispatch(syncPoints());
 		});
 
 		async function waitForMap() {
@@ -136,10 +139,6 @@ export default function MapBoxGL() {
 		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
 
 		map.current.getSource("journey").setData(journeyData);
-
-		// setInterval(() => {
-		// 	console.log('asd')
-		// }, 2000)
 	});
 
 	return (
