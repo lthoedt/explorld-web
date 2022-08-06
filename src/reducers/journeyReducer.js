@@ -1,10 +1,11 @@
 import Point from "../classes/Point";
 import Coordinate from "../classes/Coordinate";
 
-import { JOURNEY_ACTIONS, JOURNEY_STATUS } from "../actions/journeyActions";
+import { JOURNEY_ACTIONS, JOURNEY_STATUS, MAP_STATUS } from "../actions/journeyActions";
 
 const initialJourneyState = {
 	status: JOURNEY_STATUS.UNLOADED,
+	mapStatus: MAP_STATUS.UNLOADED,
 	journey: [
 		// new Point(
 		// 	"1",
@@ -67,7 +68,7 @@ export default (state = initialJourneyState, action) => {
 			return {...state, journey: action.journey};
 
 		case JOURNEY_ACTIONS.MAP_LOADED:
-			return {...state};
+			return {...state, mapStatus: MAP_STATUS.LOADED};
 		default:
 			return state;
 	}

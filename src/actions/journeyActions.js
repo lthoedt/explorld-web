@@ -19,6 +19,11 @@ export const JOURNEY_STATUS = {
 	SYNCED: "SYNCED",
 };
 
+export const MAP_STATUS = {
+	UNLOADED: "UNLOADED",
+	LOADED: "LOADED",
+}
+
 const explorerId = "123";
 
 export const syncPoints = () => {
