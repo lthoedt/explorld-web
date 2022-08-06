@@ -20,7 +20,7 @@ export const syncPoints = () => {
 
 		// call to api
 		const response = await axios.post(
-			`${URIs.api}/points/${explorerId}/sync`,
+			`${URIs.api}/explorer/${explorerId}/journey/sync`,
 			pointsJSON,
 			{ headers: { "content-type": "application/json" } }
 		);
