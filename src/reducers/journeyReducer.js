@@ -1,29 +1,29 @@
 import Point from "../classes/Point";
 import Coordinate from "../classes/Coordinate";
 
-import { JOURNEY_ACTIONS } from "../actions/journeyActions";
+import { JOURNEY_ACTIONS, JOURNEY_STATUS } from "../actions/journeyActions";
 
 const initialJourneyState = {
-	status: "loaded",
+	status: JOURNEY_STATUS.UNLOADED,
 	journey: [
-		new Point(
-			"1",
-			new Coordinate(51.983488, 5.880724),
-			0,
-			Date.now() - 3550
-		),
-		new Point(
-			"1",
-			new Coordinate(51.98368, 5.882087),
-			0,
-			Date.now() - 3600
-		),
-		new Point(
-			"1",
-			new Coordinate(51.984056, 5.892321),
-			0,
-			Date.now() - 3500
-		),
+		// new Point(
+		// 	"1",
+		// 	new Coordinate(51.983488, 5.880724),
+		// 	0,
+		// 	Date.now() - 3550
+		// ),
+		// new Point(
+		// 	"1",
+		// 	new Coordinate(51.98368, 5.882087),
+		// 	0,
+		// 	Date.now() - 3600
+		// ),
+		// new Point(
+		// 	"1",
+		// 	new Coordinate(51.984056, 5.892321),
+		// 	0,
+		// 	Date.now() - 3500
+		// ),
 	], // Point
 	unsyncedJourney: []
 };
@@ -62,6 +62,12 @@ export default (state = initialJourneyState, action) => {
 		case JOURNEY_ACTIONS.POINTS_SYNCED:
 			// move synced points to journey
 			return {...state, journey: [...state.journey, ...state.unsyncedJourney], unsyncedJourney: []}
+
+		case JOURNEY_ACTIONS.JOURNEY_LOADED:
+			return {...state, journey: action.journey};
+
+		case JOURNEY_ACTIONS.MAP_LOADED:
+			return {...state};
 		default:
 			return state;
 	}

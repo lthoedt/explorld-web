@@ -8,7 +8,12 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { JOURNEY_ACTIONS, syncPoints } from "../actions/journeyActions";
+import {
+	JOURNEY_ACTIONS,
+	JOURNEY_STATUS,
+	loadJourney,
+	syncPoints,
+} from "../actions/journeyActions";
 
 import Coordinate from "../classes/Coordinate";
 
@@ -24,9 +29,22 @@ export default function MapBoxGL() {
 	const dispatch = useDispatch();
 	const state = useSelector((state) => state.journey);
 
-	const journeyCoords = [...state.journey, ...state.unsyncedJourney].map((point) =>
-		point.coordinates.toArray()
-	);
+	if (state.status == JOURNEY_STATUS.UNLOADED) dispatch(loadJourney());
+
+	const getCoordinatesFromJourney = () =>
+		[...state.journey, ...state.unsyncedJourney].map((point) =>
+			point.coordinates.toArray()
+		);
+
+	function refreshJourneySource() {
+		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
+		
+		console.log("Map refreshed!")
+
+		journeyData.geometry.coordinates = getCoordinatesFromJourney();
+
+		map.current.getSource("journey").setData(journeyData);
+	}
 
 	const mapContainer = useRef(null);
 	const map = useRef(null);
@@ -40,7 +58,7 @@ export default function MapBoxGL() {
 		properties: {},
 		geometry: {
 			type: "LineString",
-			coordinates: journeyCoords,
+			coordinates: getCoordinatesFromJourney(),
 		},
 	};
 
@@ -73,7 +91,7 @@ export default function MapBoxGL() {
 		);
 
 		// Explorer moved
-		geolocate.on('geolocate', function (e) {
+		geolocate.on("geolocate", function (e) {
 			const lat = e.coords.latitude;
 			const lon = e.coords.longitude;
 
@@ -83,7 +101,7 @@ export default function MapBoxGL() {
 				heading: e.coords.heading,
 			});
 
-			if (state.status != 'syncing') dispatch(syncPoints());
+			if (state.status != JOURNEY_STATUS.SYNCING) dispatch(syncPoints());
 		});
 
 		async function waitForMap() {
@@ -128,15 +146,14 @@ export default function MapBoxGL() {
 					"line-width": 8,
 				},
 			});
+			dispatch({type: JOURNEY_ACTIONS.MAP_LOADED})
 		}
 
 		waitForMap();
 	});
 
 	useEffect(() => {
-		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
-
-		map.current.getSource("journey").setData(journeyData);
+		refreshJourneySource();
 	});
 
 	return (
