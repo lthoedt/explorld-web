@@ -77,8 +77,6 @@ export default function MapBoxGL() {
 			const lat = e.coords.latitude;
 			const lon = e.coords.longitude;
 
-			console.log('===============================')
-
 			dispatch({
 				type: JOURNEY_ACTIONS.ADD_POINT,
 				coordinate: new Coordinate(lat, lon),

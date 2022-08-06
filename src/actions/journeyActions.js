@@ -11,12 +11,12 @@ const explorerId = "123";
 
 export const syncPoints = () => {
 	return async (dispatch, getState) => {
+		if (getState().journey.unsyncedJourney.length < 5) return; //TODO: network setting
+
 		// set status syncing
 		dispatch({ type: JOURNEY_ACTIONS.SET_STATUS, status: "syncing" });
 
 		const pointsJSON = JSON.stringify(getState().journey.unsyncedJourney);
-
-		console.log(pointsJSON);
 
 		// call to api
 		const response = await axios.post(
@@ -24,8 +24,6 @@ export const syncPoints = () => {
 			pointsJSON,
 			{ headers: { "content-type": "application/json" } }
 		);
-
-		console.log(response);
 
 		dispatch({ type: JOURNEY_ACTIONS.POINTS_SYNCED });
 

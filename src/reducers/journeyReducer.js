@@ -33,7 +33,7 @@ export default (state = initialJourneyState, action) => {
 		case JOURNEY_ACTIONS.ADD_POINT:
 			const distanceMovedThreshhold = 5; // TODO: changable by data/performance setting
 
-			let lastLocation = state.journey[state.journey.length - 1];
+			let lastLocation = state.unsyncedJourney[state.unsyncedJourney.length - 1];
 
 			if (lastLocation) {
 				lastLocation = lastLocation.coordinates;
