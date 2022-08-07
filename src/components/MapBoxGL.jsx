@@ -47,15 +47,13 @@ export default function MapBoxGL() {
 		);
 
 	function refreshJourneySource() {
-		// if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
-		if (!map.current) return; // wait for map to initialize
+		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
 
-		addSplitJourneyLayers();
 		console.log("Map refreshed!");
 
-		// journeyData.geometry.coordinates = getCoordinatesFromJourney();
+		journeyData.geometry.coordinates = getCoordinatesFromJourney();
 
-		// map.current.getSource("journey").setData(journeyData);
+		map.current.getSource("journey").setData(journeyData);
 	}
 
 	function addSplitJourneyLayers() {
@@ -228,6 +226,25 @@ export default function MapBoxGL() {
 				exaggeration: 1,
 			});
 
+			map.current.addSource(`journey`, {
+				type: "geojson",
+				data: journeyData,
+			});
+
+			map.current.addLayer({
+				id: `journey`,
+				type: "line",
+				source: `journey`,
+				layout: {
+					"line-join": "round",
+					"line-cap": "round",
+				},
+				paint: {
+					"line-color": `#00ff00`,
+					"line-width": 6,
+				},
+			});
+
 			dispatch({ type: JOURNEY_ACTIONS.MAP_LOADED });
 		}
 
@@ -235,6 +252,8 @@ export default function MapBoxGL() {
 	});
 
 	useEffect(() => {
+		if (map.current) addSplitJourneyLayers();
+
 		refreshJourneySource();
 	});
 
