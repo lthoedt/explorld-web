@@ -41,18 +41,30 @@ export default function MapBoxGL() {
 
 	const [oldJourneyAdded, setOldJourneyAdded] = useState(false);
 
-	const getCoordinatesFromJourney = () =>
-		[...state.currentJourney,...state.unsyncedJourney].map((point) =>
-			point.coordinates.toArray()
-		);
+	const [coords, setCoords] = useState([]);
+
+	const updateCoordinatesFromJourney = () => {
+		const currentJourney = state.currentJourney;
+		const unsyncedJourney = state.unsyncedJourney;
+
+		// currentJourney isnt fully in the coords
+		// add the rest after the last stpot in.
+		if (coords.length < currentJourney.length)
+			for (let i = coords.length; i < currentJourney.length; i++)
+				coords.push(currentJourney[i].coordinates.toArray());
+
+		if (coords.length < currentJourney.length + unsyncedJourney.length)
+			for (let i = coords.length - currentJourney.length; i < unsyncedJourney.length; i++)
+				coords.push(unsyncedJourney[i].coordinates.toArray());
+	}
 
 	function refreshJourneySource() {
 		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
 
 		console.log("Map refreshed!");
 
-		// TODO: only update newly added
-		journeyData.geometry.coordinates = getCoordinatesFromJourney();
+		updateCoordinatesFromJourney();
+		journeyData.geometry.coordinates = coords;
 
 		map.current.getSource("journey").setData(journeyData);
 	}
@@ -86,7 +98,7 @@ export default function MapBoxGL() {
 					"line-cap": "round",
 				},
 				paint: {
-					"line-color": `#${Math.floor(Math.random()*16777215).toString(16)}`,
+					"line-color": `#${Math.floor(Math.random() * 16777215).toString(16)}`,
 					"line-width": 6,
 				},
 			});
@@ -104,7 +116,9 @@ export default function MapBoxGL() {
 		properties: {},
 		geometry: {
 			type: "LineString",
-			coordinates: getCoordinatesFromJourney(),
+			coordinates: [...state.currentJourney, ...state.unsyncedJourney].map((point) =>
+				point.coordinates.toArray()
+			),
 		},
 	};
 
