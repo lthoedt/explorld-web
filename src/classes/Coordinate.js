@@ -1,13 +1,15 @@
 export default class Coordinate {
-    lat;
-    lon;
+	lat;
+	lon;
 
-    constructor(lat, lon) {
-        this.lat = lat;
-        this.lon = lon;
-    }
+	constructor(lat, lon) {
+		this.lat = lat;
+		this.lon = lon;
+	}
 
-    toArray() {
-        return [this.lon, this.lat]
-    }
+	toArray() {
+		return [this.lon, this.lat];
+	}
+
+	static fromJSON = (json) => new Coordinate(json.lat, json.lon);
 }

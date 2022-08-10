@@ -8,7 +8,13 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { JOURNEY_ACTIONS, syncPoints } from "../actions/journeyActions";
+import {
+	JOURNEY_ACTIONS,
+	JOURNEY_STATUS,
+	loadJourney,
+	MAP_STATUS,
+	syncPoints,
+} from "../actions/journeyActions";
 
 import Coordinate from "../classes/Coordinate";
 
@@ -24,9 +30,7 @@ export default function MapBoxGL() {
 	const dispatch = useDispatch();
 	const state = useSelector((state) => state.journey);
 
-	const journeyCoords = [...state.journey, ...state.unsyncedJourney].map((point) =>
-		point.coordinates.toArray()
-	);
+	if (state.status == JOURNEY_STATUS.UNLOADED) dispatch(loadJourney());
 
 	const mapContainer = useRef(null);
 	const map = useRef(null);
@@ -35,12 +39,124 @@ export default function MapBoxGL() {
 	const [lng, setLng] = useState(5.88);
 	const [lat, setLat] = useState(51.98);
 
+	const [oldJourneyAdded, setOldJourneyAdded] = useState(false);
+
+	const getCoordinatesFromJourney = () =>
+		[...state.journey, ...state.unsyncedJourney].map((point) =>
+			point.coordinates.toArray()
+		);
+
+	function refreshJourneySource() {
+		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
+
+		console.log("Map refreshed!");
+
+		journeyData.geometry.coordinates = getCoordinatesFromJourney();
+
+		map.current.getSource("journey").setData(journeyData);
+	}
+
+	function addSplitJourneyLayers() {
+		if (state.mapStatus == MAP_STATUS.UNLOADED || oldJourneyAdded) return;
+
+		const points = [...state.journey, ...state.unsyncedJourney];
+
+		const splitJourneys = [];
+
+		let pointsOnDay = [];
+
+		for (const point of points) {
+			if (pointsOnDay.length == 0) {
+				pointsOnDay.push(point);
+				continue;
+			}
+
+			const lastAddedElementDate = new Date(
+				pointsOnDay[pointsOnDay.length - 1].time
+			);
+			const currentPointDate = new Date(point.time);
+
+			const lastDateSeperated = {
+				day: lastAddedElementDate.getDate(),
+				month: lastAddedElementDate.getMonth(),
+				year: lastAddedElementDate.getFullYear(),
+				second: lastAddedElementDate.getSeconds(),
+				minute: lastAddedElementDate.getMinutes(),
+				hour: lastAddedElementDate.getHours(),
+			};
+
+			const currentDateSeperated = {
+				day: currentPointDate.getDate(),
+				month: currentPointDate.getMonth(),
+				year: currentPointDate.getFullYear(),
+				second: currentPointDate.getSeconds(),
+				minute: currentPointDate.getMinutes(),
+				hour: currentPointDate.getHours(),
+			};
+
+			const filters = ["day", "month", "year", "minute"];
+
+			let isDifferent = false;
+
+			for (const filter of filters) {
+				if (lastDateSeperated[filter] != currentDateSeperated[filter])
+					isDifferent = true;
+			}
+
+			if (isDifferent) {
+				splitJourneys.push(pointsOnDay);
+				pointsOnDay = [point];
+				continue;
+			}
+
+			pointsOnDay.push(point);
+		}
+
+		splitJourneys.push(pointsOnDay);
+
+		for (const [i, splitPoints] of splitJourneys.entries()) {
+			map.current.addSource(`journey_${i}`, {
+				type: "geojson",
+				data: {
+					type: "Feature",
+					properties: {},
+					geometry: {
+						type: "LineString",
+						coordinates: splitPoints.map((point) =>
+							point.coordinates.toArray()
+						),
+					},
+				},
+			});
+
+			map.current.addLayer({
+				id: `journey_${i}`,
+				type: "line",
+				source: `journey_${i}`,
+				layout: {
+					"line-join": "round",
+					"line-cap": "round",
+				},
+				paint: {
+					"line-color": `#${Math.floor(Math.random()*16777215).toString(16)}`,
+					"line-width": 6,
+				},
+			});
+
+			// add older points to the map permenantly (done)
+			// Store an index or something now where the current day starts
+			// Add points from the current day to its own layer which gets refreshed each time
+		}
+
+		setOldJourneyAdded(true);
+	}
+
 	const journeyData = {
 		type: "Feature",
 		properties: {},
 		geometry: {
 			type: "LineString",
-			coordinates: journeyCoords,
+			coordinates: getCoordinatesFromJourney(),
 		},
 	};
 
@@ -73,7 +189,7 @@ export default function MapBoxGL() {
 		);
 
 		// Explorer moved
-		geolocate.on('geolocate', function (e) {
+		geolocate.on("geolocate", function (e) {
 			const lat = e.coords.latitude;
 			const lon = e.coords.longitude;
 
@@ -83,7 +199,7 @@ export default function MapBoxGL() {
 				heading: e.coords.heading,
 			});
 
-			if (state.status != 'syncing') dispatch(syncPoints());
+			if (state.status != JOURNEY_STATUS.SYNCING) dispatch(syncPoints());
 		});
 
 		async function waitForMap() {
@@ -110,33 +226,35 @@ export default function MapBoxGL() {
 				exaggeration: 1,
 			});
 
-			map.current.addSource("journey", {
+			map.current.addSource(`journey`, {
 				type: "geojson",
 				data: journeyData,
 			});
 
 			map.current.addLayer({
-				id: "journey",
+				id: `journey`,
 				type: "line",
-				source: "journey",
+				source: `journey`,
 				layout: {
 					"line-join": "round",
 					"line-cap": "round",
 				},
 				paint: {
-					"line-color": "#888",
-					"line-width": 8,
+					"line-color": `#00ff00`,
+					"line-width": 6,
 				},
 			});
+
+			dispatch({ type: JOURNEY_ACTIONS.MAP_LOADED });
 		}
 
 		waitForMap();
 	});
 
 	useEffect(() => {
-		if (!map.current || !map.current.getSource("journey")) return; // wait for map to initialize
+		if (map.current) addSplitJourneyLayers();
 
-		map.current.getSource("journey").setData(journeyData);
+		refreshJourneySource();
 	});
 
 	return (
