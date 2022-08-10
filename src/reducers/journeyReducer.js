@@ -26,6 +26,7 @@ const initialJourneyState = {
 		// 	Date.now() - 3500
 		// ),
 	], // Point
+	currentJourney: [],
 	unsyncedJourney: []
 };
 
@@ -54,7 +55,6 @@ export default (state = initialJourneyState, action) => {
 				Date.now()
 			);
 
-			// TODO: upload to database
 			return { ...state, unsyncedJourney: [...state.unsyncedJourney, point] };
 
 		case JOURNEY_ACTIONS.SET_STATUS:
@@ -62,7 +62,7 @@ export default (state = initialJourneyState, action) => {
 
 		case JOURNEY_ACTIONS.POINTS_SYNCED:
 			// move synced points to journey
-			return {...state, journey: [...state.journey, ...state.unsyncedJourney], unsyncedJourney: []}
+			return {...state, currentJourney: [...state.currentJourney, ...state.unsyncedJourney], unsyncedJourney: []}
 
 		case JOURNEY_ACTIONS.JOURNEY_LOADED:
 			return {...state, journey: action.journey};

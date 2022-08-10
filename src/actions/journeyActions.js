@@ -74,7 +74,9 @@ export const loadJourney = () => {
 				status: JOURNEY_STATUS.UNLOADED,
 			});
 
-		const journey = response.data.map((point) => Pt.fromJSON(point));	
+		const journey = response.data.map((points) => points.map((point) => Pt.fromJSON(point)));
+
+		console.log(journey)
 
 		dispatch({
 			type: JOURNEY_ACTIONS.JOURNEY_LOADED,

@@ -42,7 +42,7 @@ export default function MapBoxGL() {
 	const [oldJourneyAdded, setOldJourneyAdded] = useState(false);
 
 	const getCoordinatesFromJourney = () =>
-		[...state.journey, ...state.unsyncedJourney].map((point) =>
+		[...state.currentJourney,...state.unsyncedJourney].map((point) =>
 			point.coordinates.toArray()
 		);
 
@@ -51,6 +51,7 @@ export default function MapBoxGL() {
 
 		console.log("Map refreshed!");
 
+		// TODO: only update newly added
 		journeyData.geometry.coordinates = getCoordinatesFromJourney();
 
 		map.current.getSource("journey").setData(journeyData);
@@ -59,60 +60,7 @@ export default function MapBoxGL() {
 	function addSplitJourneyLayers() {
 		if (state.mapStatus == MAP_STATUS.UNLOADED || oldJourneyAdded) return;
 
-		const points = [...state.journey, ...state.unsyncedJourney];
-
-		const splitJourneys = [];
-
-		let pointsOnDay = [];
-
-		for (const point of points) {
-			if (pointsOnDay.length == 0) {
-				pointsOnDay.push(point);
-				continue;
-			}
-
-			const lastAddedElementDate = new Date(
-				pointsOnDay[pointsOnDay.length - 1].time
-			);
-			const currentPointDate = new Date(point.time);
-
-			const lastDateSeperated = {
-				day: lastAddedElementDate.getDate(),
-				month: lastAddedElementDate.getMonth(),
-				year: lastAddedElementDate.getFullYear(),
-				second: lastAddedElementDate.getSeconds(),
-				minute: lastAddedElementDate.getMinutes(),
-				hour: lastAddedElementDate.getHours(),
-			};
-
-			const currentDateSeperated = {
-				day: currentPointDate.getDate(),
-				month: currentPointDate.getMonth(),
-				year: currentPointDate.getFullYear(),
-				second: currentPointDate.getSeconds(),
-				minute: currentPointDate.getMinutes(),
-				hour: currentPointDate.getHours(),
-			};
-
-			const filters = ["day", "month", "year", "minute"];
-
-			let isDifferent = false;
-
-			for (const filter of filters) {
-				if (lastDateSeperated[filter] != currentDateSeperated[filter])
-					isDifferent = true;
-			}
-
-			if (isDifferent) {
-				splitJourneys.push(pointsOnDay);
-				pointsOnDay = [point];
-				continue;
-			}
-
-			pointsOnDay.push(point);
-		}
-
-		splitJourneys.push(pointsOnDay);
+		const splitJourneys = state.journey;
 
 		for (const [i, splitPoints] of splitJourneys.entries()) {
 			map.current.addSource(`journey_${i}`, {
