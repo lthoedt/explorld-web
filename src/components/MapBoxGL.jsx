@@ -103,11 +103,8 @@ export default function MapBoxGL() {
 				},
 			});
 
-			// add older points to the map permenantly (done)
-			// Store an index or something now where the current day starts
-			// Add points from the current day to its own layer which gets refreshed each time
 		}
-
+		
 		setOldJourneyAdded(true);
 	}
 
@@ -214,8 +211,9 @@ export default function MapBoxGL() {
 	});
 
 	useEffect(() => {
-		if (map.current) addSplitJourneyLayers();
-
+		if (!map.current) return 
+		
+		addSplitJourneyLayers();
 		refreshJourneySource();
 	});
 
