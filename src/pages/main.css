@@ -4,83 +4,87 @@ body {
 	padding: 0;
 }
 
+:root {
+	--colors-primary: #5856d6;
+	--colors-secondary: #BF5AF2;
+	--colors-tertiary: #A2845E;
+}
+
 /* remove mapbox add */
 .mapboxgl-ctrl-bottom-left,
 .mapboxgl-ctrl-bottom-right {
 	display: none;
 }
 
-.media-item.active {
-	background: rgb(63, 94, 251);
-	background: radial-gradient(
-		circle at left top,
-		rgba(63, 94, 251, 0.8) 0%,
-		rgba(203, 103, 123, 1) 100%
-	);
-	background-size: 400% 400%;
-	animation: gradient 5s ease infinite;
-}
-
-@keyframes gradient {
-	0% {
-		background-position: 0% 50%;
-	}
-
-	50% {
-		background-position: 100% 50%;
-	}
-
-	100% {
-		background-position: 0% 50%;
-	}
-}
-
-.centerContent {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-
-span.title {
-	font-weight: 600;
-	font-size: 1.5rem;
-	text-align: center;
-}
-
-span.subTitle {
-	font-weight: 400;
-	font-size: 1.3rem;
-	color: var(--f7-color-pink);
-	text-align: center;
-}
-
-.songs.list .item-content {
-	padding: 0;
-}
-
-.songs.list .item-media div:first-child {
-	padding: 0
-		calc(var(--f7-list-item-padding-horizontal) + var(--f7-safe-area-left));
-}
-
-.page-content {
-	overflow-y: scroll;
-}
-
 .map-container {
-	height: 100vh;
-	width: 100vw;
+	height: 100%;
+	width: 100%;
 }
 
-.sidebar {
-	background-color: rgba(35, 55, 75, 0.9);
-	color: #fff;
-	padding: 6px 12px;
-	font-family: monospace;
-	z-index: 1;
+.SidePanel {
+	z-index: 4;
+	position: fixed;
+	width: 80%;
+	/* max-width: 22rem; */
+	height: 100%;
+	background-color: white;
+	transform: translateX(-100%);
+	transition: transform 0.2s ease;
+}
+
+.SidePanel::after {
+    content: '';
+    background-color: var(--colors-tertiary);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: -10;
+    opacity: 0;
+    left: 100%;
+	transition: opacity 200ms ease;
+}
+
+.SidePanel.expanded {
+	transform: translateX(0);
+}
+
+.SidePanel.expanded::after {
+    opacity: 0.5;
+}
+
+.Main {
+	display: flex;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.SidePanel > .button.toggle {
 	position: absolute;
-	top: 0;
-	left: 0;
-	margin: 12px;
-	border-radius: 4px;
+    left: 100%;
+	transition: transform 200ms ease;
+}
+
+.SidePanel.expanded > .button.toggle {
+	transform: rotate(180deg);
+}
+
+
+.button.icon {
+	border: none;
+    background: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	color: var(--colors-primary);
+}
+
+.button.icon::before {
+	content: '';
+    position: absolute;
+    height: 3em;
+    width: 3em;
+    border-radius: 100%;
+    z-index: -1;
+    background-color: white;
 }

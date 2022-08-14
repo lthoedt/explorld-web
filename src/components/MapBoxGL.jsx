@@ -104,7 +104,7 @@ export default function MapBoxGL() {
 			});
 
 		}
-		
+
 		setOldJourneyAdded(true);
 	}
 
@@ -211,15 +211,13 @@ export default function MapBoxGL() {
 	});
 
 	useEffect(() => {
-		if (!map.current) return 
-		
+		if (!map.current) return
+
 		addSplitJourneyLayers();
 		refreshJourneySource();
 	});
 
 	return (
-		<div>
-			<div ref={mapContainer} className="map-container" />
-		</div>
+		<div ref={mapContainer} className="map-container" />
 	);
 }
